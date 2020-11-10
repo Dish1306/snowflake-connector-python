@@ -84,7 +84,7 @@ jobs:
           
   build-manylinux-aarch64:
     needs: lint
-    name: Build linux-py${{ matrix.python-version }}
+    name: Build linux-aarch64-py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux2014_aarch64
     strategy:
