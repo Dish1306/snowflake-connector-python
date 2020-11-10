@@ -83,6 +83,40 @@ jobs:
         with:
           name: linux_py${{ matrix.python-version }}
           path: dist/
+          
+  build-manylinux-aarch64:
+    needs: lint
+    name: Build linux-py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_aarch64
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1  
+      - name: Updating path
+        run: |
+          echo "/opt/python/cp35-cp35m/bin/" >> $GITHUB_PATH
+          echo "/opt/python/cp36-cp36m/bin/" >> $GITHUB_PATH
+          echo "/opt/python/cp37-cp37m/bin/" >> $GITHUB_PATH
+          echo "/opt/python/cp38-cp38/bin/" >> $GITHUB_PATH
+      - name: Display Python version
+        run: python${{ matrix.python-version }} -c "import sys; print(sys.version)"
+      - name: Upgrade setuptools and pip
+        run: python${{ matrix.python-version }} -m pip install -U setuptools pip
+      - name: Generate wheel
+        run: python${{ matrix.python-version }} -m pip wheel -v -w dist_tmp --no-deps .
+      - name: Run auditwheel
+        run: auditwheel repair --plat manylinux2010_x86_64 -L connector dist_tmp/snowflake_connector_python*.whl -w dist
+      - name: Show wheels generated
+        run: ls -lh dist
+      - uses: actions/upload-artifact@v1
+        with:
+          name: linux_py${{ matrix.python-version }}
+          path: dist/
 
   build-macos:
     needs: lint
